@@ -1,0 +1,26 @@
+{
+  "name": "ritual-persistent-agent-cli",
+  "version": "0.1.0",
+  "description": "CLI tool to deploy and manage Ritual persistent agents on testnet (Genesis 1000)",
+  "type": "module",
+  "bin": {
+    "ritual": "./src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "deploy": "node src/index.js deploy",
+    "status": "node src/index.js status",
+    "scan": "node src/index.js scan"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0",
+    "conf": "^12.0.0",
+    "ora": "^8.0.0",
+    "viem": "^2.0.0",
+    "@noble/secp256k1": "^2.0.0",
+    "@noble/hashes": "^1.4.0"
+  },
+  "keywords": ["ritual", "persistent-agent", "genesis-1000", "cli"],
+  "license": "MIT"
+}
