@@ -14,7 +14,7 @@ import {
   RITUAL_CHAIN,
   FACTORY_ADDRESS,
   FACTORY_ABI,
-  LAUNCHER_ABI,
+  HARNESS_ABI,
   REGISTRY,
   REGISTRY_ABI,
   RITUAL_WALLET,
@@ -261,16 +261,16 @@ async function previewAgent() {
   }
 
   try {
-    const [launcher, actualSalt] = await readContract(
-      FACTORY_ADDRESS, FACTORY_ABI, "predictCompressedLauncher",
+    const [harness, actualSalt] = await readContract(
+      FACTORY_ADDRESS, FACTORY_ABI, "predictHarness",
       [getAddress(state.account), salt]
     );
-    state.predictedLauncher = launcher;
+    state.predictedLauncher = harness;
     state._salt = salt;
     state._saltRaw = saltRaw;
 
     // Check if deployed
-    const code = await getCode(launcher);
+    const code = await getCode(harness);
     const exists = code !== "0x";
 
     // Fetch state if deployed
@@ -278,24 +278,24 @@ async function previewAgent() {
     let wakeMode = 0;
     if (exists) {
       try {
-        configured = await readContract(launcher, LAUNCHER_ABI, "configured", []);
-        wakeMode = await readContract(launcher, LAUNCHER_ABI, "wakeMode", []);
+        configured = await readContract(harness, HARNESS_ABI, "configured", []);
+        wakeMode = await readContract(harness, HARNESS_ABI, "wakeMode", []);
       } catch (_) {}
     }
 
     const labels = { 0: "Stopped", 1: "Armed", 2: "Sleeping" };
     els.previewResult.style.display = "block";
     els.previewResult.innerHTML = `
-      <div class="row"><span class="label">Harness</span><span class="value" style="font-size:13px;color:var(--accent)">${launcher}</span></div>
+      <div class="row"><span class="label">Harness</span><span class="value" style="font-size:13px;color:var(--accent)">${harness}</span></div>
       <div class="row"><span class="label">Salt</span><span class="value" style="font-size:11px;color:var(--muted)">${saltRaw}</span></div>
       <div class="row"><span class="label">Deployed</span><span class="value ${exists ? 'state-armed' : ''}">${exists ? 'Yes' : 'No'}</span></div>
       ${exists ? `<div class="row"><span class="label">Configured</span><span class="value ${configured ? 'state-armed' : 'state-stopped'}">${configured}</span></div>
       <div class="row"><span class="label">Wake Mode</span><span class="value">${labels[wakeMode] || wakeMode}</span></div>
       <div class="row"><span class="label">Genesis</span><span class="value ${wakeMode === 1 ? 'state-armed' : 'state-stopped'}">${wakeMode === 1 ? '✅ Eligible' : 'Not armed'}</span></div>` : ''}
-      <div class="row"><span class="label">Explorer</span><span class="value"><a href="${RITUAL_CHAIN.explorerUrl}/address/${launcher}" target="_blank" style="color:var(--accent)">open ↗</a></span></div>
+      <div class="row"><span class="label">Explorer</span><span class="value"><a href="${RITUAL_CHAIN.explorerUrl}/address/${harness}" target="_blank" style="color:var(--accent)">open ↗</a></span></div>
     `;
 
-    log("info", `Predicted launcher: ${shortAddr(launcher)} (${exists ? "deployed" : "new"})`);
+    log("info", `Predicted harness: ${shortAddr(harness)} (${exists ? "deployed" : "new"})`);
   } catch (e) {
     log("err", "Preview failed: " + e.message);
   }
@@ -326,30 +326,31 @@ async function deployAgent() {
     await discoverExecutor();
 
     // 2. Predict launcher
-    log("info", "Predicting launcher address...");
-    const [launcher] = await readContract(
-      FACTORY_ADDRESS, FACTORY_ABI, "predictCompressedLauncher",
+    // 2. Predict harness
+    log("info", "Predicting harness address...");
+    const [harness] = await readContract(
+      FACTORY_ADDRESS, FACTORY_ABI, "predictHarness",
       [getAddress(state.account), salt]
     );
-    state.predictedLauncher = launcher;
+    state.predictedLauncher = harness;
 
     // 3. Deploy if needed
-    const code = await getCode(launcher);
+    const code = await getCode(harness);
     if (code === "0x") {
-      log("info", "Deploying launcher...");
+      log("info", "Deploying harness...");
       const deployData = encodeFunctionData({
-        abi: FACTORY_ABI, functionName: "deployLauncherCompressed", args: [salt],
+        abi: FACTORY_ABI, functionName: "deployHarness", args: [salt],
       });
       const tx = await walletRequest("eth_sendTransaction", [{
         from: state.account,
         to: FACTORY_ADDRESS,
         data: deployData,
-        gas: "0xf4240", // 1,000,000
+        gas: "0x3567e0", // 3,500,000
       }]);
-      log("tx", "Launcher deployed", tx);
+      log("tx", "Harness deployed", tx);
       await waitForTx(tx);
     } else {
-      log("ok", "Launcher already deployed");
+      log("ok", "Harness already deployed");
     }
 
     // 4. Encrypt secrets
@@ -360,56 +361,47 @@ async function deployAgent() {
       encryptedEnv = await encryptRitualEnv(state.executorPubKey, envPayload);
     }
 
-    // 5. Prepare config
-    // 5. Build config params for persistent agent (26 fields)
-    spinner.start("Building agent configuration...");
-
-    const providerMap = { ritual: 0, anthropic: 0, openai: 1, gemini: 2, xai: 3, openrouter: 4 };
-    const providerVal = providerMap[provider] ?? 0;
-
+    // 5. Build sovereign agent params
+    log("info", "Building configuration...");
     const emptyRef = { key: "", value: "", metadata: "" };
 
     const params = {
       executor: getAddress(state.executor),
-      encryptedSecrets: encryptedEnv !== "0x" ? [encryptedEnv] : [],
-      ttl: 500n,
-      secretSignatures: [],
-      userPublicKey: "0x",
-      maxSpawnBlock: 100000n,
-      deliveryTarget: getAddress(state.predictedLauncher),
+      payment: depositWei,
+      input: new TextEncoder().encode(prompt),
+      maxDuration: 3600n,
+      maxPollBlock: 100000n,
+      programId: "ZeroClaw",
+      deliveryAddress: getAddress(harness),
       deliverySelector: DELIVERY_SELECTOR,
-      deliveryGasLimit: 500000n,
-      deliveryMaxFeePerGas: parseEther("100"),
-      deliveryMaxPriorityFeePerGas: 0n,
-      deliveryValue: 0n,
-      provider: providerVal,
+      callbackGasLimit: 500000n,
+      gasPrice: 0n,
+      maxPrice: parseEther("100"),
+      cliType: 0,
+      prompt: prompt,
+      encryptedEnv: encryptedEnv,
+      inputRef: emptyRef,
+      outputRef: emptyRef,
+      assetRefs: [],
+      proofRef: emptyRef,
       model: model,
-      llmApiKeyRef: apiKey ? "LLM_API_KEY" : "",
-      daConfig: emptyRef,
-      soulRef: { key: "prompt", value: prompt, metadata: "text/plain" },
-      agentsRef: emptyRef,
-      userRef: emptyRef,
-      memoryRef: emptyRef,
-      identityRef: emptyRef,
-      toolsRef: emptyRef,
-      openclawConfigRef: emptyRef,
-      restoreFromCid: "",
-      rpcUrls: JSON.stringify({ ritual: "https://rpc.ritualfoundation.org" }),
-      agentRuntime: 0,
+      modelArgs: [],
+      temperature: 700,
+      maxTokens: 4096,
+      extra: "",
     };
-
-    spinner.succeed("Configuration built");
 
     const schedule = {
       callbackGasLimit: 500000,
-      period: 2000,
-      payment: 100,
+      frequency: 2000,
+      ttl: 500,
       gasPrice: 0n,
       maxPrice: parseEther("100"),
-      startBlock: 0n,
+      value: 0n,
     };
 
-    const rolling = { enabled: 0, window: 5, repeat: 0 };
+    const rollingWindowSize = 5;
+    const maxReserve = parseEther("0.5"); // extra reserve
 
     // 6. Deposit to RitualWallet if needed
     const walletBalData = encodeFunctionData({ abi: WALLET_ABI, functionName: "balanceOf", args: [state.account] });
@@ -428,31 +420,21 @@ async function deployAgent() {
       await waitForTx(depTx);
     }
 
-    // 7. Lock funds
-    log("info", `Locking ${deposit} RITUAL...`);
-    const lockData = encodeFunctionData({ abi: WALLET_ABI, functionName: "lock", args: [depositWei] });
-    const lockTx = await walletRequest("eth_sendTransaction", [{
-      from: state.account,
-      to: RITUAL_WALLET,
-      data: lockData,
-      gas: "0x30d40", // 200,000
-    }]);
-    log("tx", "Lock sent", lockTx);
-    await waitForTx(lockTx);
-
-    // 8. ConfigureFundAndArm
-    log("info", "Sending configureFundAndArm...");
+    // 7. Send configureFundAndStart (payable, includes deposit+lock)
+    log("info", "Sending configureFundAndStart...");
+    const totalValue = depositWei + maxReserve; // deposit + reserve for gas
     const cfaData = encodeFunctionData({
-      abi: FACTORY_ABI, functionName: "configureFundAndArm",
-      args: [launcher, params, schedule, rolling, depositWei, BigInt(lockBlocks)],
+      abi: FACTORY_ABI, functionName: "configureFundAndStart",
+      args: [harness, params, schedule, rollingWindowSize, maxReserve],
     });
     const cfaTx = await walletRequest("eth_sendTransaction", [{
       from: state.account,
       to: FACTORY_ADDRESS,
       data: cfaData,
-      gas: "0x7a1200", // 8,000,000
+      value: "0x" + totalValue.toString(16),
+      gas: "0x4c4b40", // 5,000,000
     }]);
-    log("tx", "configureFundAndArm sent", cfaTx);
+    log("tx", "configureFundAndStart sent", cfaTx);
     await waitForTx(cfaTx);
 
     log("ok", "Agent deployed and armed! ✅");
@@ -501,8 +483,8 @@ async function fetchAgent() {
       return;
     }
 
-    const configured = await readContract(agentAddr, LAUNCHER_ABI, "configured", []);
-    const wakeMode = await readContract(agentAddr, LAUNCHER_ABI, "wakeMode", []);
+    const configured = await readContract(agentAddr, HARNESS_ABI, "configured", []);
+    const wakeMode = await readContract(agentAddr, HARNESS_ABI, "wakeMode", []);
 
     els.mConfigured.textContent = String(configured);
     els.mConfigured.className = "value " + (configured ? "state-armed" : "state-stopped");
@@ -539,7 +521,7 @@ async function manageAction(action) {
   const gasLimit = action === "restart" ? "0x7a120" : "0x3567e0"; // 500k / 3.5M
 
   try {
-    const data = encodeFunctionData({ abi: LAUNCHER_ABI, functionName: fnName, args: [] });
+    const data = encodeFunctionData({ abi: HARNESS_ABI, functionName: fnName, args: [] });
     const tx = await walletRequest("eth_sendTransaction", [{
       from: state.account,
       to: addr,
@@ -567,7 +549,7 @@ async function scanAgents() {
     const salt = keccak256(toHex("agent-" + i));
     try {
       const [launcher] = await readContract(
-        FACTORY_ADDRESS, FACTORY_ABI, "predictCompressedLauncher", [owner, salt]
+        FACTORY_ADDRESS, FACTORY_ABI, "predictHarness", [owner, salt]
       );
       const code = await getCode(launcher);
       if (code !== "0x") {
@@ -575,8 +557,8 @@ async function scanAgents() {
         let wakeMode = 0;
         let balance = "0";
         try {
-          configured = await readContract(launcher, LAUNCHER_ABI, "configured", []);
-          wakeMode = await readContract(launcher, LAUNCHER_ABI, "wakeMode", []);
+          configured = await readContract(launcher, HARNESS_ABI, "configured", []);
+          wakeMode = await readContract(launcher, HARNESS_ABI, "wakeMode", []);
           const b = await rpcRequest("eth_call", [{
             to: RITUAL_WALLET,
             data: encodeFunctionData({ abi: WALLET_ABI, functionName: "balanceOf", args: [launcher] }),

@@ -1,4 +1,4 @@
-// Ritual Contract Addresses & ABIs — dApp version (corrected)
+// Ritual Contract Addresses & ABIs — Sovereign Agent Factory (matching UfukNode/zunmax)
 
 export const RITUAL_CHAIN = {
   id: 1979,
@@ -9,138 +9,96 @@ export const RITUAL_CHAIN = {
   nativeCurrency: { name: "RITUAL", symbol: "RITUAL", decimals: 18 },
 };
 
-export const FACTORY_ADDRESS = "0xD4AA9D55215dc8149Af57605e70921Ea16b73591";
+// Sovereign Agent Factory (what everyone uses for Genesis 1000)
+export const FACTORY_ADDRESS = "0x9dC4C054e53bCc4Ce0A0Ff09E890A7a8e817f304";
 export const RITUAL_WALLET = "0x532F0dF0896F353d8C3DD8cc134e8129DA2a3948";
 export const REGISTRY = "0x9644e8562cE0Fe12b4deeC4163c064A8862Bf47F";
 export const HEARTBEAT = "0xEF50b5E63808Ab7Ad7D978DD842c4A197a5B3aCa";
 
+const STRING_TRIPLE = [
+  { name: "key", type: "string" },
+  { name: "value", type: "string" },
+  { name: "metadata", type: "string" },
+];
+
 export const FACTORY_ABI = [
-  // predictCompressedLauncher
+  // predictHarness
   {
     type: "function",
-    name: "predictCompressedLauncher",
+    name: "predictHarness",
     stateMutability: "view",
     inputs: [
       { name: "owner", type: "address" },
-      { name: "userSalt", type: "bytes32" },
+      { name: "salt", type: "bytes32" },
     ],
     outputs: [
-      { name: "launcher", type: "address" },
+      { name: "harness", type: "address" },
       { name: "actualSalt", type: "bytes32" },
     ],
   },
-  // deployLauncherCompressed
+  // deployHarness
   {
     type: "function",
-    name: "deployLauncherCompressed",
+    name: "deployHarness",
     stateMutability: "nonpayable",
-    inputs: [{ name: "userSalt", type: "bytes32" }],
-    outputs: [{ name: "launcher", type: "address" }],
+    inputs: [{ name: "salt", type: "bytes32" }],
+    outputs: [],
   },
-  // configureFundAndArm — 26-field params struct for persistent agent
+  // configureFundAndStart — what UfukNode and zunmax use
   {
     type: "function",
-    name: "configureFundAndArm",
-    stateMutability: "nonpayable",
+    name: "configureFundAndStart",
+    stateMutability: "payable",
     inputs: [
-      { name: "launcher", type: "address" },
-      // PersistentAgentParams (26 fields matching precompile 0x0820)
+      { name: "harness", type: "address" },
       {
-        name: "params",
-        type: "tuple",
+        name: "params", type: "tuple",
         components: [
           { name: "executor", type: "address" },
-          { name: "encryptedSecrets", type: "bytes[]" },
-          { name: "ttl", type: "uint256" },
-          { name: "secretSignatures", type: "bytes[]" },
-          { name: "userPublicKey", type: "bytes" },
-          { name: "maxSpawnBlock", type: "uint64" },
-          { name: "deliveryTarget", type: "address" },
+          { name: "payment", type: "uint256" },
+          { name: "input", type: "bytes" },
+          { name: "maxDuration", type: "uint64" },
+          { name: "maxPollBlock", type: "uint64" },
+          { name: "programId", type: "string" },
+          { name: "deliveryAddress", type: "address" },
           { name: "deliverySelector", type: "bytes4" },
-          { name: "deliveryGasLimit", type: "uint256" },
-          { name: "deliveryMaxFeePerGas", type: "uint256" },
-          { name: "deliveryMaxPriorityFeePerGas", type: "uint256" },
-          { name: "deliveryValue", type: "uint256" },
-          { name: "provider", type: "uint8" },
-          { name: "model", type: "string" },
-          { name: "llmApiKeyRef", type: "string" },
-          { name: "daConfig", type: "tuple", components: [
-            { name: "key", type: "string" },
-            { name: "value", type: "string" },
-            { name: "metadata", type: "string" },
-          ]},
-          { name: "soulRef", type: "tuple", components: [
-            { name: "key", type: "string" },
-            { name: "value", type: "string" },
-            { name: "metadata", type: "string" },
-          ]},
-          { name: "agentsRef", type: "tuple", components: [
-            { name: "key", type: "string" },
-            { name: "value", type: "string" },
-            { name: "metadata", type: "string" },
-          ]},
-          { name: "userRef", type: "tuple", components: [
-            { name: "key", type: "string" },
-            { name: "value", type: "string" },
-            { name: "metadata", type: "string" },
-          ]},
-          { name: "memoryRef", type: "tuple", components: [
-            { name: "key", type: "string" },
-            { name: "value", type: "string" },
-            { name: "metadata", type: "string" },
-          ]},
-          { name: "identityRef", type: "tuple", components: [
-            { name: "key", type: "string" },
-            { name: "value", type: "string" },
-            { name: "metadata", type: "string" },
-          ]},
-          { name: "toolsRef", type: "tuple", components: [
-            { name: "key", type: "string" },
-            { name: "value", type: "string" },
-            { name: "metadata", type: "string" },
-          ]},
-          { name: "openclawConfigRef", type: "tuple", components: [
-            { name: "key", type: "string" },
-            { name: "value", type: "string" },
-            { name: "metadata", type: "string" },
-          ]},
-          { name: "restoreFromCid", type: "string" },
-          { name: "rpcUrls", type: "string" },
-          { name: "agentRuntime", type: "uint16" },
-        ],
-      },
-      // ScheduleConfig
-      {
-        name: "schedule",
-        type: "tuple",
-        components: [
-          { name: "callbackGasLimit", type: "uint32" },
-          { name: "period", type: "uint32" },
-          { name: "payment", type: "uint32" },
+          { name: "callbackGasLimit", type: "uint256" },
           { name: "gasPrice", type: "uint256" },
           { name: "maxPrice", type: "uint256" },
-          { name: "startBlock", type: "uint256" },
+          { name: "cliType", type: "uint16" },
+          { name: "prompt", type: "string" },
+          { name: "encryptedEnv", type: "bytes" },
+          { name: "inputRef", type: "tuple", components: STRING_TRIPLE },
+          { name: "outputRef", type: "tuple", components: STRING_TRIPLE },
+          { name: "assetRefs", type: "tuple[]", components: STRING_TRIPLE },
+          { name: "proofRef", type: "tuple", components: STRING_TRIPLE },
+          { name: "model", type: "string" },
+          { name: "modelArgs", type: "string[]" },
+          { name: "temperature", type: "uint16" },
+          { name: "maxTokens", type: "uint32" },
+          { name: "extra", type: "string" },
         ],
       },
-      // RollingConfig
       {
-        name: "rolling",
-        type: "tuple",
+        name: "schedule", type: "tuple",
         components: [
-          { name: "enabled", type: "uint32" },
-          { name: "window", type: "uint16" },
-          { name: "repeat", type: "uint16" },
+          { name: "callbackGasLimit", type: "uint32" },
+          { name: "frequency", type: "uint32" },
+          { name: "ttl", type: "uint32" },
+          { name: "gasPrice", type: "uint256" },
+          { name: "maxPrice", type: "uint256" },
+          { name: "value", type: "uint256" },
         ],
       },
-      { name: "deposit", type: "uint256" },
-      { name: "lockBlocks", type: "uint256" },
+      { name: "rollingWindowSize", type: "uint16" },
+      { name: "maxReserve", type: "uint256" },
     ],
     outputs: [],
   },
 ];
 
-// Launcher/Harness ABI
-export const LAUNCHER_ABI = [
+// Harness ABI (for managing deployed agents)
+export const HARNESS_ABI = [
   {
     type: "function",
     name: "configured",
@@ -178,7 +136,6 @@ export const LAUNCHER_ABI = [
   },
 ];
 
-// TEEServiceRegistry ABI
 export const REGISTRY_ABI = [
   {
     type: "function",
@@ -190,8 +147,7 @@ export const REGISTRY_ABI = [
     ],
     outputs: [
       {
-        name: "services",
-        type: "tuple[]",
+        name: "services", type: "tuple[]",
         components: [
           { name: "teeAddress", type: "address" },
           { name: "pubKey", type: "bytes" },
@@ -202,7 +158,6 @@ export const REGISTRY_ABI = [
   },
 ];
 
-// RitualWallet ABI
 export const WALLET_ABI = [
   {
     type: "function",
@@ -230,13 +185,6 @@ export const WALLET_ABI = [
     name: "lock",
     stateMutability: "nonpayable",
     inputs: [{ name: "amount", type: "uint256" }],
-    outputs: [],
-  },
-  {
-    type: "function",
-    name: "depositFor",
-    stateMutability: "payable",
-    inputs: [{ name: "account", type: "address" }],
     outputs: [],
   },
 ];
