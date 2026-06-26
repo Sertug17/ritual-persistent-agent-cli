@@ -6,7 +6,8 @@ Part of the [Genesis 1000](https://x.com/ritualfnd/status/2069820943011303735) r
 
 ## Features
 
-- **Deploy** — Deploy a persistent agent with one command: prompt, model, salt, deposit
+- **CLI** — Deploy from terminal: prompt, model, salt, deposit
+- **🌐 Web dApp** — Same functionality, no terminal needed: [open dApp](https://sertug17.github.io/ritual-persistent-agent-cli/)
 - **Status** — Check agent state (Armed/Stopped/Unconfigured), balance, lock
 - **Scan** — Find all agents deployed from your wallet
 - **Manage** — Restart, stop, top-up any agent
