@@ -22,6 +22,9 @@ import {
 } from "./abis.js";
 import { encryptRitualEnv, buildEnvPayload } from "./crypto.js";
 
+// ─── Constants ────────────────────────────────────
+// keccak256("onSovereignAgentResult(bytes32,bytes)")[0:4]
+const DELIVERY_SELECTOR = "0x8ca12055";
 // ─── State ────────────────────────────────────────
 const state = {
   account: "",
@@ -358,36 +361,44 @@ async function deployAgent() {
     }
 
     // 5. Prepare config
+    // 5. Build config params for persistent agent (26 fields)
+    spinner.start("Building agent configuration...");
+
+    const providerMap = { ritual: 0, anthropic: 0, openai: 1, gemini: 2, xai: 3, openrouter: 4 };
+    const providerVal = providerMap[provider] ?? 0;
+
     const emptyRef = { key: "", value: "", metadata: "" };
-    const DELIVERY_SELECTOR = keccak256(
-      new TextEncoder().encode("onSovereignAgentResult(bytes32,bytes)")
-    ).slice(0, 10);
 
     const params = {
       executor: getAddress(state.executor),
-      payment: depositWei,
-      input: new TextEncoder().encode(prompt),
-      maxDuration: 3600n,
-      maxPollBlock: 100000n,
-      programId: "ZeroClaw",
-      deliveryAddress: getAddress(launcher),
+      encryptedSecrets: encryptedEnv !== "0x" ? [encryptedEnv] : [],
+      ttl: 500n,
+      secretSignatures: [],
+      userPublicKey: "0x",
+      maxSpawnBlock: 100000n,
+      deliveryTarget: getAddress(state.predictedLauncher),
       deliverySelector: DELIVERY_SELECTOR,
-      callbackGasLimit: 500000n,
-      gasPrice: 0n,
-      maxPrice: parseEther("100"),
-      cliType: 0,
-      prompt: prompt,
-      encryptedEnv: encryptedEnv,
-      inputRef: emptyRef,
-      outputRef: emptyRef,
-      assetRefs: [],
-      proofRef: emptyRef,
+      deliveryGasLimit: 500000n,
+      deliveryMaxFeePerGas: parseEther("100"),
+      deliveryMaxPriorityFeePerGas: 0n,
+      deliveryValue: 0n,
+      provider: providerVal,
       model: model,
-      modelArgs: [],
-      temperature: 700,
-      maxTokens: 4096,
-      extra: "",
+      llmApiKeyRef: apiKey ? "LLM_API_KEY" : "",
+      daConfig: emptyRef,
+      soulRef: { key: "prompt", value: prompt, metadata: "text/plain" },
+      agentsRef: emptyRef,
+      userRef: emptyRef,
+      memoryRef: emptyRef,
+      identityRef: emptyRef,
+      toolsRef: emptyRef,
+      openclawConfigRef: emptyRef,
+      restoreFromCid: "",
+      rpcUrls: JSON.stringify({ ritual: "https://rpc.ritualfoundation.org" }),
+      agentRuntime: 0,
     };
+
+    spinner.succeed("Configuration built");
 
     const schedule = {
       callbackGasLimit: 500000,
