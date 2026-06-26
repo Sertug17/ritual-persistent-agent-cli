@@ -161,7 +161,7 @@ export const REGISTRY_ABI = [
       {
         name: "services", type: "tuple[]",
         components: [
-          { name: "url", type: "string" },
+          { name: "teeAddress", type: "address" },
           { name: "pubKey", type: "bytes" },
           { name: "active", type: "bool" },
         ],

@@ -103,7 +103,7 @@ export async function deployCommand(options) {
       spinner.fail("No active executors found");
       process.exit(1);
     }
-    executor = services[0].url;
+    executor = services[0].teeAddress;
     const pubKey = services[0].pubKey;
     // Store executor pubkey for encryption
     process.env.RITUAL_EXECUTOR_PUBKEY = pubKey;
@@ -115,7 +115,7 @@ export async function deployCommand(options) {
     const services = await readContract(
       publicClient, REGISTRY, REGISTRY_ABI, "getServicesByCapability", [0, true]
     );
-    const svc = services.find(s => s.url === executor);
+    const svc = services.find(s => s.teeAddress === executor);
     if (svc) {
       process.env.RITUAL_EXECUTOR_PUBKEY = svc.pubKey;
     }

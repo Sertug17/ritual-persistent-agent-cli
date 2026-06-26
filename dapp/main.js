@@ -236,10 +236,10 @@ async function discoverExecutor() {
     const services = await readContract(REGISTRY, REGISTRY_ABI, "getServicesByCapability", [0, true]);
     if (!services || services.length === 0) throw new Error("No active executors");
     const svc = services[0];
-    state.executor = svc.url;
+    state.executor = svc.teeAddress;
     state.executorPubKey = svc.pubKey;
     els.deployExecutor.value = shortAddr(state.executor);
-    log("info", `Executor: ${state.executor.slice(0, 20)}...`);
+    log("info", `Executor: ${shortAddr(svc.teeAddress)}`);
     return svc;
   } catch (e) {
     log("err", "Executor discovery: " + e.message);
