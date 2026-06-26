@@ -154,7 +154,7 @@ export const REGISTRY_ABI = [
     name: "getServicesByCapability",
     stateMutability: "view",
     inputs: [
-      { name: "capability", type: "uint256" },
+      { name: "capability", type: "uint8" },
       { name: "onlyActive", type: "bool" },
     ],
     outputs: [

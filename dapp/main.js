@@ -233,7 +233,7 @@ function switchTab(tab) {
 // ─── Executor Discovery ───────────────────────────
 async function discoverExecutor() {
   try {
-    const services = await readContract(REGISTRY, REGISTRY_ABI, "getServicesByCapability", [0n, true]);
+    const services = await readContract(REGISTRY, REGISTRY_ABI, "getServicesByCapability", [0, true]);
     if (!services || services.length === 0) throw new Error("No active executors");
     const svc = services[0];
     state.executor = svc.url;

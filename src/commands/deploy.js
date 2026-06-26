@@ -97,7 +97,7 @@ export async function deployCommand(options) {
   let executor = options.executor;
   if (!executor) {
     const services = await readContract(
-      publicClient, REGISTRY, REGISTRY_ABI, "getServicesByCapability", [0n, true]
+      publicClient, REGISTRY, REGISTRY_ABI, "getServicesByCapability", [0, true]
     );
     if (!services || services.length === 0) {
       spinner.fail("No active executors found");
@@ -113,7 +113,7 @@ export async function deployCommand(options) {
     spinner.succeed(`Executor: ${chalk.green(executor)} (manual)`);
     // For manual executor, we need to find its pubkey
     const services = await readContract(
-      publicClient, REGISTRY, REGISTRY_ABI, "getServicesByCapability", [0n, true]
+      publicClient, REGISTRY, REGISTRY_ABI, "getServicesByCapability", [0, true]
     );
     const svc = services.find(s => s.url === executor);
     if (svc) {
