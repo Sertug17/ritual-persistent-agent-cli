@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ritual Persistent Agent</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='28' font-size='28'>⚡</text></svg>" />
+  <link rel="stylesheet" href="styles.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "viem": "https://cdn.jsdelivr.net/npm/viem@2.53.1/+esm"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div class="app-shell" id="app">
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div class="brand-row">
+        <div class="brand-icon">⚡</div>
+        <h1>Persistent Agent</h1>
+        <span class="chain-badge">Ritual Testnet</span>
+      </div>
+      <div class="wallet-area">
+        <span class="status-pill" id="chainStatus">⏳ Chain</span>
+        <button class="wallet-button" id="connectButton">Connect Wallet</button>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-bar" id="tabBar">
+      <button class="tab-button active" data-tab="deploy">Deploy</button>
+      <button class="tab-button" data-tab="manage">Manage</button>
+      <button class="tab-button" data-tab="scan">Agents</button>
+      <button class="tab-button" data-tab="activity">Activity</button>
+    </div>
+
+    <!-- Deploy Panel -->
+    <div class="panel active" id="panel-deploy">
+      <div class="panel-heading">
+        <div class="eyebrow">Genesis 1000</div>
+        <h2>Deploy Persistent Agent</h2>
+      </div>
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label>Prompt (Soul)</label>
+          <textarea id="deployPrompt" placeholder="You are a helpful AI assistant running on Ritual Chain..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Model</label>
+          <select id="deployModel">
+            <option value="claude-sonnet-4">Claude Sonnet 4</option>
+            <option value="gpt-4o">GPT-4o</option>
+            <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+            <option value="grok-3">Grok 3</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Provider</label>
+          <select id="deployProvider">
+            <option value="ritual">Ritual (free)</option>
+            <option value="anthropic">Anthropic</option>
+            <option value="openai">OpenAI</option>
+            <option value="gemini">Gemini</option>
+            <option value="xai">xAI</option>
+          </select>
+        </div>
+        <div class="form-group full-width" id="apiKeyGroup" style="display:none;">
+          <label>LLM API Key</label>
+          <input type="password" id="deployApiKey" placeholder="sk-..." />
+        </div>
+        <div class="form-group">
+          <label>Salt</label>
+          <input type="text" id="deploySalt" placeholder="e.g. my-agent-1" />
+        </div>
+        <div class="form-group">
+          <label>Executor</label>
+          <input type="text" id="deployExecutor" placeholder="auto-discover" disabled />
+        </div>
+        <div class="form-group">
+          <label>Deposit (RITUAL)</label>
+          <input type="number" id="deployDeposit" value="10" min="1" step="1" />
+        </div>
+        <div class="form-group">
+          <label>Lock (blocks)</label>
+          <input type="number" id="deployLock" value="1000" min="100" step="100" />
+        </div>
+      </div>
+      <div class="button-row">
+        <button class="secondary-button compact-button" id="previewButton">🔍 Preview</button>
+        <button class="primary-button" id="deployButton">🚀 Deploy + Arm</button>
+        <span id="deployStatus"></span>
+      </div>
+      <div id="previewResult" class="agent-card" style="display:none;"></div>
+    </div>
+
+    <!-- Manage Panel -->
+    <div class="panel" id="panel-manage">
+      <div class="panel-heading">
+        <div class="eyebrow">Agent Controls</div>
+        <h2>Manage Agent</h2>
+      </div>
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label>Agent Address</label>
+          <input type="text" id="manageAddress" placeholder="0x..." />
+        </div>
+      </div>
+      <div class="button-row">
+        <button class="secondary-button compact-button" id="manageFetch">📋 Fetch</button>
+      </div>
+      <div id="manageResult" class="agent-card" style="display:none;">
+        <div class="row"><span class="label">Address</span><span class="value" id="mAddr">-</span></div>
+        <div class="row"><span class="label">Configured</span><span class="value" id="mConfigured">-</span></div>
+        <div class="row"><span class="label">Wake Mode</span><span class="value" id="mWakeMode">-</span></div>
+        <div class="row"><span class="label">Balance</span><span class="value" id="mBalance">-</span></div>
+        <div class="row"><span class="label">Lock</span><span class="value" id="mLock">-</span></div>
+        <div class="row"><span class="label">Genesis</span><span class="value" id="mGenesis">-</span></div>
+        <div class="button-row">
+          <button class="secondary-button compact-button" id="manageRestart">🔄 Restart</button>
+          <button class="danger-button compact-button" id="manageStop">⏹ Stop</button>
+          <button class="secondary-button compact-button" id="manageTopup">💰 Top Up</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scan Panel -->
+    <div class="panel" id="panel-scan">
+      <div class="panel-heading">
+        <div class="eyebrow">Wallet Deployments</div>
+        <h2>Your Agents</h2>
+      </div>
+      <div class="button-row">
+        <button class="primary-button" id="scanButton">🔍 Scan Agents</button>
+        <span id="scanCount"></span>
+      </div>
+      <div id="scanResults"></div>
+    </div>
+
+    <!-- Activity Panel -->
+    <div class="panel" id="panel-activity">
+      <div class="panel-heading">
+        <div class="eyebrow">Transaction Log</div>
+        <h2>Activity</h2>
+      </div>
+      <div id="activityLog" class="activity-log">
+        <div class="entry"><span class="time">[--:--:--]</span> <span class="info">Ready. Connect wallet to start.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
