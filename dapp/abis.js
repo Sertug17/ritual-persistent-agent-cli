@@ -78,7 +78,11 @@ const CFA_BASE = {
   inputs: [
     { name: "params", type: "tuple", components: PARAMS_COMPONENTS },
     { name: "schedule", type: "tuple", components: SCHEDULE_COMPONENTS },
-    { name: "rollingWindowSize", type: "uint16" },
+    { name: "rollingWindow", type: "tuple", components: [
+      { name: "enabled", type: "uint32" },
+      { name: "window", type: "uint16" },
+      { name: "repeat", type: "uint16" },
+    ]},
     { name: "maxReserve", type: "uint256" },
   ],
   outputs: [],

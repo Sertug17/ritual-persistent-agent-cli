@@ -404,14 +404,14 @@ async function deployAgent() {
       value: 0n,
     };
 
-    const rollingWindowSize = 5000;
+    const rollingWindow = { enabled: 1, window: 5000, repeat: 1 };
     const maxReserve = 100_000n; // extra reserve for gas
 
     // 6. Send configureFundAndStart to the HARNESS (not factory!)
     log("info", "Sending configureFundAndStart to harness...");
     const cfaData = encodeFunctionData({
       abi: HARNESS_ABI, functionName: "configureFundAndStart",
-      args: [params, schedule, rollingWindowSize, maxReserve],
+      args: [params, schedule, rollingWindow, maxReserve],
     });
     const cfaTx = await walletRequest("eth_sendTransaction", [{
       from: state.account,
