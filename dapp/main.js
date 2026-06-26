@@ -361,22 +361,26 @@ async function deployAgent() {
       encryptedEnv = await encryptRitualEnv(state.executorPubKey, envPayload);
     }
 
-    // 5. Build sovereign agent params
+    // 5. Build sovereign agent params (matching zunmax's proven ABI)
     log("info", "Building configuration...");
     const emptyRef = { key: "", value: "", metadata: "" };
+    const maxPollBlock = BigInt(await rpcRequest("eth_blockNumber", [])) + 10_000_000n;
+
+    // Payment is tiny — real value is sent as msg.value with the tx
+    const paymentWei = 500n;
 
     const params = {
       executor: getAddress(state.executor),
-      payment: depositWei,
-      input: new TextEncoder().encode(prompt),
-      maxDuration: 3600n,
-      maxPollBlock: 100000n,
-      programId: "ZeroClaw",
+      payment: paymentWei,
+      input: "0x",
+      maxDuration: 5n,
+      maxPollBlock: maxPollBlock,
+      programId: "SOVEREIGN_AGENT_TASK",
       deliveryAddress: getAddress(harness),
       deliverySelector: DELIVERY_SELECTOR,
-      callbackGasLimit: 500000n,
-      gasPrice: 0n,
-      maxPrice: parseEther("100"),
+      callbackGasLimit: 3_000_000n,
+      gasPrice: 1_000_000_000n,
+      maxPrice: 100_000_000n,
       cliType: 0,
       prompt: prompt,
       encryptedEnv: encryptedEnv,
@@ -386,52 +390,34 @@ async function deployAgent() {
       proofRef: emptyRef,
       model: model,
       modelArgs: [],
-      temperature: 700,
-      maxTokens: 4096,
+      temperature: 5,
+      maxTokens: 2048,
       extra: "",
     };
 
     const schedule = {
-      callbackGasLimit: 500000,
-      frequency: 2000,
+      callbackGasLimit: 800_000,
+      frequency: 180,
       ttl: 500,
-      gasPrice: 0n,
-      maxPrice: parseEther("100"),
+      gasPrice: 1_000_000_000n,
+      maxPrice: 100_000_000n,
       value: 0n,
     };
 
-    const rollingWindowSize = 5;
-    const maxReserve = parseEther("0.5"); // extra reserve
+    const rollingWindowSize = 5000;
+    const maxReserve = 100_000n; // extra reserve for gas
 
-    // 6. Deposit to RitualWallet if needed
-    const walletBalData = encodeFunctionData({ abi: WALLET_ABI, functionName: "balanceOf", args: [state.account] });
-    const walletBalHex = await rpcRequest("eth_call", [{ to: RITUAL_WALLET, data: walletBalData }, "latest"]);
-    const walletBal = BigInt(walletBalHex || "0x0");
-
-    if (walletBal < depositWei) {
-      log("info", `Depositing ${deposit} RITUAL to RitualWallet...`);
-      const depTx = await walletRequest("eth_sendTransaction", [{
-        from: state.account,
-        to: RITUAL_WALLET,
-        data: encodeFunctionData({ abi: WALLET_ABI, functionName: "deposit", args: [] }),
-        value: "0x" + (depositWei * 2n).toString(16),
-      }]);
-      log("tx", "Deposit sent", depTx);
-      await waitForTx(depTx);
-    }
-
-    // 7. Send configureFundAndStart (payable, includes deposit+lock)
-    log("info", "Sending configureFundAndStart...");
-    const totalValue = depositWei + maxReserve; // deposit + reserve for gas
+    // 6. Send configureFundAndStart to the HARNESS (not factory!)
+    log("info", "Sending configureFundAndStart to harness...");
     const cfaData = encodeFunctionData({
-      abi: FACTORY_ABI, functionName: "configureFundAndStart",
-      args: [harness, params, schedule, rollingWindowSize, maxReserve],
+      abi: HARNESS_ABI, functionName: "configureFundAndStart",
+      args: [params, schedule, rollingWindowSize, maxReserve],
     });
     const cfaTx = await walletRequest("eth_sendTransaction", [{
       from: state.account,
-      to: FACTORY_ADDRESS,
+      to: harness, // ← KEY: send to HARNESS, not factory!
       data: cfaData,
-      value: "0x" + totalValue.toString(16),
+      value: "0x" + depositWei.toString(16), // send deposit as tx value
       gas: "0x4c4b40", // 5,000,000
     }]);
     log("tx", "configureFundAndStart sent", cfaTx);
