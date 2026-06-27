@@ -1,99 +1,179 @@
-# Ritual Persistent Agent CLI
+# ⚡ Ritual Sovereign Agent
 
-**Deploy and manage persistent agents on Ritual testnet — from your terminal.**
+**Deploy, manage, and monitor AI agents on [Ritual Chain](https://ritual.net) — from your terminal or browser.**
 
-Part of the [Genesis 1000](https://x.com/ritualfnd/status/2069820943011303735) race: the first 1,000 wallets to spawn a persistent agent get etched into the on-chain registry forever.
+[![Built on Ritual](https://img.shields.io/badge/Built%20on-Ritual%20Chain-8A2BE2)](https://ritual.net)
+[![Genesis 1000](https://img.shields.io/badge/Genesis%201000-Eligible-00FF00)](https://x.com/ritualfnd/status/2069820943011303735)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## Features
+> 🏆 **Genesis 1000 Ready** — Deploy your Sovereign Agent and secure your on-chain rank among the first 1,000 wallets.
 
-- **CLI** — Deploy from terminal: prompt, model, salt, deposit
-- **🌐 Web dApp** — Same functionality, no terminal needed: [open dApp](https://sertug17.github.io/ritual-persistent-agent-cli/)
-- **Status** — Check agent state (Armed/Stopped/Unconfigured), balance, lock
-- **Scan** — Find all agents deployed from your wallet
-- **Manage** — Restart, stop, top-up any agent
-- **Encrypted secrets** — ECIES encryption with secp256k1 + AES-256-GCM (same as Ritual's official dApp)
-- **Auto executor discovery** — Picks an available executor from TEEServiceRegistry
-- **Config persistence** — Save private key, defaults, env overrides
+![Agent Deployed](https://img.shields.io/badge/status-deployed%20%7C%20armed-success)
 
-## Installation
+---
+
+## ✨ Features
+
+| | Feature | Details |
+|---|---------|---------|
+| 🖥️ | **CLI** | Full-featured terminal client |
+| 🌐 | **Web dApp** | No-install browser interface — [try it now](https://sertug17.github.io/ritual-persistent-agent-cli/) |
+| 🤖 | **Sovereign Agent deploy** | One-shot agent with configurable prompt, model, schedule |
+| 🔍 | **Agent status** | Check state (Armed/Stopped), configuration, wake mode |
+| 🎯 | **Genesis 1000 check** | Eligibility status at a glance |
+| 🔄 | **Restart / Stop** | Manage running agents |
+| 🔐 | **Encrypted secrets** | ECIES encryption with secp256k1 + AES-256-GCM |
+| 🏗️ | **Deterministic addresses** | Predictable agent addresses from salt |
+| 📋 | **Wallet scan** | Find all agents deployed from your wallet |
+
+---
+
+## 🚀 Quick Start
+
+### Web dApp (no install)
+
+Open **[https://sertug17.github.io/ritual-persistent-agent-cli/](https://sertug17.github.io/ritual-persistent-agent-cli/)**
+
+1. Connect your wallet (MetaMask / WalletConnect)
+2. Enter your agent prompt (e.g. *"You are a price monitor. Fetch ETH/USD every 10 minutes and alert on 5% drops."*)
+3. Pick a model and salt
+4. Click **Deploy + Arm**
+
+Your agent will be live on Ritual testnet in ~30 seconds.
+
+### CLI
 
 ```bash
+# Install
 npm install -g ritual-persistent-agent-cli
-```
 
-Or run directly:
-
-```bash
-git clone https://github.com/your-username/ritual-persistent-agent-cli.git
+# Or run directly
+git clone https://github.com/Sertug17/ritual-persistent-agent-cli.git
 cd ritual-persistent-agent-cli
 npm install
-node src/index.js --help
-```
 
-## Quick Start
-
-### 1. Set up your private key
-
-```bash
-ritual config set-key 0xYourPrivateKey
-```
-
-Or use env var (don't save to shell history):
-
-```bash
+# Configure
 export RITUAL_PRIVATE_KEY=0xYourPrivateKey
-```
 
-### 2. Get test RITUAL tokens
-
-```bash
-ritual faucet
-```
-
-Opens the Ritual faucet page. Get an access code from [Ritual Discord](https://discord.gg/ritual-net) first.
-
-### 3. Deploy your first persistent agent
-
-```bash
-ritual deploy --prompt "You are a helpful assistant" \
+# Deploy your first Sovereign Agent
+ritual deploy --prompt "You are a helpful AI assistant." \
   --model claude-sonnet-4 \
-  --salt myfirstagent \
-  --deposit 10 \
-  --lock 1000
-```
+  --salt my-agent
 
-### 4. Check your agent
-
-```bash
+# Check status
 ritual status 0xYourAgentAddress
-```
 
-### 5. Scan your wallet
-
-```bash
-ritual scan --limit 30
-```
-
-### 6. Manage your agent
-
-```bash
+# Manage
 ritual restart 0xYourAgentAddress
 ritual stop 0xYourAgentAddress
-ritual topup 0xYourAgentAddress --amount 5
 ```
 
-## Commands
+---
+
+## 📸 Screenshots
+
+```
+┌─────────────────────────────────────────────┐
+│  ⚡ Sovereign Agent           Ritual Testnet │
+│  ┌─────────────────────────────────────────┐│
+│  │ ✅ Deployed!                            ││
+│  │                                         ││
+│  │  Harness      0x6ba5...7246             ││
+│  │  Deployed     Yes                       ││
+│  │  Configured   true                      ││
+│  │  Wake Mode    Armed                     ││
+│  │  Genesis      ✅ Eligible               ││
+│  └─────────────────────────────────────────┘│
+└─────────────────────────────────────────────┘
+```
+
+---
+
+## 🧠 What Can You Build?
+
+Sovereign Agents on Ritual Chain can run any AI task with on-chain verification:
+
+| Use Case | Prompt Suggestion | Precompiles Used |
+|----------|------------------|------------------|
+| 💰 **Price Monitor** | *"Fetch ETH/USD price every 10 minutes, store on-chain, alert on 5% drops"* | HTTP + Scheduler |
+| 🤖 **AI Chatbot** | *"Respond to user messages with streaming LLM responses"* | LLM |
+| 📊 **Data Aggregator** | *"Collect data from multiple APIs, summarize with LLM, store result"* | HTTP + LLM + Scheduler |
+| 🖼️ **NFT Generator** | *"Generate images from text prompts and mint as NFTs"* | Image Precompile |
+| 🔔 **Alert Bot** | *"Monitor blockchain events and send notifications"* | HTTP + Scheduler |
+
+---
+
+## 🏗️ Architecture
+
+```
+ritual deploy
+  ├── 1. predictHarness          → deterministic agent address
+  ├── 2. deployHarness            → deploy harness contract
+  ├── 3. TEEServiceRegistry       → discover executor + pubkey
+  ├── 4. ECIES encrypt secrets    → encrypt LLM API key
+  ├── 5. RitualWallet deposit     → fund agent
+  └── 6. configureFundAndStart    → configure + fund + arm (sent to harness)
+```
+
+### Contract Addresses (Ritual Testnet)
+
+| Contract | Address |
+|----------|---------|
+| SovereignAgentFactory | `0x9dC4C054e53bCc4Ce0A0Ff09E890A7a8e817f304` |
+| RitualWallet | `0x532F0dF0896F353d8C3DD8cc134e8129DA2a3948` |
+| TEEServiceRegistry | `0x9644e8562cE0Fe12b4deeC4163c064A8862Bf47F` |
+| AgentHeartbeat | `0xEF50b5E63808Ab7Ad7D978DD842c4A197a5B3aCa` |
+
+---
+
+## 🌐 Network
+
+| Parameter | Value |
+|-----------|-------|
+| Chain ID | `1979` |
+| RPC | `https://rpc.ritualfoundation.org` |
+| Explorer | `https://explorer.ritualfoundation.org` |
+| Currency | RITUAL (18 decimals) |
+| Faucet | `https://faucet.ritualfoundation.org` |
+
+---
+
+## 🏅 Genesis 1000
+
+This tool is built for the [Genesis 1000](https://x.com/ritualfnd/status/2069820943011303735) campaign.
+
+| Requirement | Status |
+|------------|--------|
+| Agent state = **Armed** | ✅ |
+| Configured = **true** | ✅ |
+| Wake mode = **1** | ✅ |
+| Agent balance > **0** | ✅ |
+
+Claim your rank with `/genesis_claim` in [Ritual Discord](https://discord.gg/ritual-net).
+
+---
+
+## 🔒 Security
+
+- Private keys stay local — never sent to any server
+- All transactions signed locally in your browser or terminal
+- Secrets encrypted with ECIES before submission
+- Pure client-side — no third-party backend
+
+---
+
+## 🛠️ Commands
 
 | Command | Description |
 |---------|-------------|
-| `deploy` | Deploy a new persistent agent |
-| `status <address>` | Check agent state and balance |
-| `scan` | Find all agents for your wallet |
-| `restart <address>` | Restart a stopped agent |
-| `stop <address>` | Stop an armed agent |
-| `topup <address>` | Top up agent balance |
-| `faucet` | Show faucet info |
-| `config` | Manage CLI configuration |
+| `ritual deploy` | Deploy a new Sovereign Agent |
+| `ritual status <address>` | Check agent state and Genesis eligibility |
+| `ritual scan` | Find agents deployed from your wallet |
+| `ritual restart <address>` | Restart a stopped agent |
+| `ritual stop <address>` | Stop an armed agent |
+| `ritual topup <address>` | Top up agent balance |
+| `ritual faucet` | Show faucet info |
+| `ritual config` | Manage CLI configuration |
 
 ### Deploy Options
 
@@ -104,71 +184,16 @@ ritual topup 0xYourAgentAddress --amount 5
 | `-s, --salt` | random | Unique salt for deterministic address |
 | `-d, --deposit` | `10` | Deposit in RITUAL |
 | `-l, --lock` | `1000` | Lock blocks |
-| `--provider` | `ritual` | LLM provider (ritual=free, or anthropic/openai/gemini/xai) |
-| `--api-key` | env | LLM API key (not needed for ritual provider) |
+| `--provider` | `ritual` | LLM provider |
+| `--api-key` | env | LLM API key |
 | `--executor` | auto | Specific executor address |
 
-### Environment Variables
+---
 
-| Variable | Description |
-|----------|-------------|
-| `RITUAL_PRIVATE_KEY` | Wallet private key |
-| `RITUAL_PROMPT` | Agent prompt |
-| `RITUAL_MODEL` | LLM model |
-| `RITUAL_PROVIDER` | LLM provider |
-| `RITUAL_API_KEY` | LLM API key |
+## 📄 License
 
-## Architecture
+MIT — use it, fork it, ship it.
 
-```
-ritual deploy
-  ├── 1. predictCompressedLauncher → deterministic agent address
-  ├── 2. deployLauncherCompressed   → deploy launcher contract
-  ├── 3. TEEServiceRegistry         → discover executor + pubkey
-  ├── 4. ECIES encrypt secrets      → encrypt LLM API key
-  ├── 5. RitualWallet deposit+lock  → fund agent
-  └── 6. configureFundAndArm        → configure + fund + arm
-```
+---
 
-## Network
-
-| Parameter | Value |
-|-----------|-------|
-| Chain ID | `1979` |
-| RPC | `https://rpc.ritualfoundation.org` |
-| Explorer | `https://explorer.ritualfoundation.org` |
-| Currency | RITUAL (18 decimals) |
-
-### Contracts
-
-| Contract | Address |
-|----------|---------|
-| PersistentAgentFactory | `0xD4AA9D55215dc8149Af57605e70921Ea16b73591` |
-| RitualWallet | `0x532F0dF0896F353d8C3DD8cc134e8129DA2a3948` |
-| TEEServiceRegistry | `0x9644e8562cE0Fe12b4deeC4163c064A8862Bf47F` |
-| AgentHeartbeat | `0xEF50b5E63808Ab7Ad7D978DD842c4A197a5B3aCa` |
-
-## Genesis 1000
-
-This CLI is built for the [Genesis 1000](https://x.com/ritualfnd/status/2069820943011303735) campaign.
-
-- First 1,000 wallets to spawn a **persistent agent** get ranked
-- Deploy time determines rarity of on-chain rank
-- Claim with `/genesis_claim` in [Ritual Discord](https://discord.gg/ritual-net)
-
-**Minimum requirements for Genesis eligibility:**
-- Agent state = **Armed**
-- Configured = **true**
-- Wake mode = **1**
-- Agent balance > **0**
-
-## Security
-
-- No private key is ever sent to any server
-- All transactions are signed locally
-- Secrets are ECIES-encrypted in the CLI before submission
-- Uses only Ritual testnet RPC — no third-party backend
-
-## License
-
-MIT
+*Built on [Ritual Chain](https://ritual.net) — the sovereign chain for autonomous AI agents.*
