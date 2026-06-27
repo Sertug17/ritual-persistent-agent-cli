@@ -1,4 +1,4 @@
-// Ritual Persistent Agent dApp — Main Application Logic
+// Ritual Sovereign Agent dApp — Main Application Logic
 
 import {
   encodeFunctionData,
@@ -486,11 +486,19 @@ async function fetchAgent() {
     const balanceData = encodeFunctionData({ abi: WALLET_ABI, functionName: "balanceOf", args: [agentAddr] });
     const lockData = encodeFunctionData({ abi: WALLET_ABI, functionName: "lockOf", args: [agentAddr] });
 
-    const balHex = await rpcRequest("eth_call", [{ to: RITUAL_WALLET, data: balanceData }, "latest"]);
-    const lockHex = await rpcRequest("eth_call", [{ to: RITUAL_WALLET, data: lockData }, "latest"]);
+    // Balance/lock — Sovereign Agents use maxReserve, not RitualWallet lock
+    let balanceText = "N/A", lockText = "N/A";
+    try {
+      const balHex = await rpcRequest("eth_call", [{ to: RITUAL_WALLET, data: balanceData }, "latest"]);
+      if (balHex && balHex !== "0x") balanceText = formatRitual(BigInt(balHex));
+    } catch (_) {}
+    try {
+      const lockHex = await rpcRequest("eth_call", [{ to: RITUAL_WALLET, data: lockData }, "latest"]);
+      if (lockHex && lockHex !== "0x") lockText = formatRitual(BigInt(lockHex));
+    } catch (_) {}
 
-    els.mBalance.textContent = formatRitual(BigInt(balHex || "0x0"));
-    els.mLock.textContent = formatRitual(BigInt(lockHex || "0x0"));
+    els.mBalance.textContent = balanceText;
+    els.mLock.textContent = lockText;
 
     const genesisEligible = configured && wakeMode === 1;
     els.mGenesis.textContent = genesisEligible ? "✅ Eligible" : "❌ Not eligible";
@@ -553,7 +561,7 @@ async function scanAgents() {
             to: RITUAL_WALLET,
             data: encodeFunctionData({ abi: WALLET_ABI, functionName: "balanceOf", args: [launcher] }),
           }, "latest"]);
-          balance = formatRitual(BigInt(b || "0x0"), 2);
+          balance = formatRitual(b && b !== "0x" ? BigInt(b) : 0n, 2);
         } catch (_) {}
         found.push({ addr: launcher, salt: "agent-" + i, configured, wakeMode, balance });
       }
@@ -561,7 +569,7 @@ async function scanAgents() {
   }
 
   if (found.length === 0) {
-    els.scanResults.innerHTML = '<div style="color:var(--muted);padding:16px;">No agents found for this wallet.</div>';
+    els.scanResults.innerHTML = '<div style="color:var(--muted);padding:16px;">No agents found for this wallet.</div><div style="color:var(--muted);padding:0 16px 16px;font-size:13px;">Note: Scan only checks salts matching <code>agent-{i}</code> pattern. Deployed agents with custom salts (like <code>desdeneme</code>) won\'t appear here — use the Manage tab with the agent address instead.</div>';
   } else {
     const armed = found.filter((a) => a.wakeMode === 1).length;
     let html = "";
