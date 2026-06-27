@@ -234,6 +234,7 @@ function switchTab(tab) {
 }
 
 // ─── Executor Discovery ───────────────────────────
+const DEFAULT_EXECUTOR = "0x3c7a5c0628b3d47d12c3556ac1b02b2723f390";
 async function discoverExecutor() {
   try {
     const services = await readContract(REGISTRY, REGISTRY_ABI, "getServicesByCapability", [0, true]);
@@ -245,8 +246,11 @@ async function discoverExecutor() {
     log("info", `Executor: ${shortAddr(svc.teeAddress)}`);
     return svc;
   } catch (e) {
-    log("err", "Executor discovery: " + e.message);
-    throw e;
+    log("warn", "Registry unavailable, using default executor");
+    state.executor = DEFAULT_EXECUTOR;
+    state.executorPubKey = "";
+    els.deployExecutor.value = "default (no pubkey)";
+    return { teeAddress: DEFAULT_EXECUTOR, pubKey: "" };
   }
 }
 
