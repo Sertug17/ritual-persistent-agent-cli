@@ -4,7 +4,9 @@ import chalk from "chalk";
 import { getAddress, encodeFunctionData, parseEther } from "viem";
 import { createWallet, sendTx, waitTx, readContract } from "../lib/chain.js";
 import {
-  LAUNCHER_ABI,
+  HARNESS_ABI,
+  FACTORY_ADDRESS,
+  FACTORY_ABI,
   RITUAL_WALLET,
   WALLET_ABI,
 } from "../lib/contracts.js";
@@ -72,7 +74,7 @@ export async function manageCommand(action, address, options = {}) {
     const gasLimit = action === "restart" ? 500000n : 3500000n;
 
     const txData = encodeFunctionData({
-      abi: LAUNCHER_ABI,
+      abi: HARNESS_ABI,
       functionName: fnName,
       args: [],
     });
@@ -88,7 +90,7 @@ export async function manageCommand(action, address, options = {}) {
 
     // Verify state
     try {
-      const wakeMode = await readContract(publicClient, agentAddr, LAUNCHER_ABI, "wakeMode", []);
+      const wakeMode = await readContract(publicClient, agentAddr, HARNESS_ABI, "wakeMode", []);
       const modeLabels = { 0: "Stopped", 1: "Armed", 2: "Sleeping" };
       console.log(chalk.green(`  Current state: ${modeLabels[wakeMode] || wakeMode}`));
     } catch (e) {}

@@ -16,7 +16,7 @@ import { getPrivateKey } from "./lib/config.js";
 
 program
   .name("ritual")
-  .description("CLI tool for deploying and managing Ritual persistent agents")
+  .description("CLI tool for deploying and managing Ritual Sovereign Agents")
   .version("0.1.0");
 
 // Global option for private key (can also be set via config)
@@ -40,7 +40,7 @@ program
 
 program
   .command("deploy")
-  .description("Deploy a new persistent agent")
+  .description("Deploy a new Sovereign Agent")
   .option("-p, --prompt <prompt>", "Agent prompt / soul")
   .option("-m, --model <model>", "LLM model (e.g. claude-sonnet-4, gpt-4o)")
   .option("-s, --salt <salt>", "Unique salt for deterministic address")

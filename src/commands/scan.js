@@ -6,7 +6,7 @@ import { createPublic, readContract } from "../lib/chain.js";
 import {
   FACTORY_ADDRESS,
   FACTORY_ABI,
-  LAUNCHER_ABI,
+  HARNESS_ABI,
   RITUAL_WALLET,
   WALLET_ABI,
 } from "../lib/contracts.js";
@@ -37,7 +37,7 @@ export async function scanCommand(options) {
   const limit = parseInt(options.limit);
 
   console.log(chalk.bold.cyan("\n╔══════════════════════════════════════╗"));
-  console.log(chalk.bold.cyan("║      Persistent Agent Scanner        ║"));
+  console.log(chalk.bold.cyan("║      Sovereign Agent Scanner         ║"));
   console.log(chalk.bold.cyan("╚══════════════════════════════════════╝\n"));
 
   printKV("Wallet", chalk.green(shortAddress(owner)));
@@ -54,7 +54,7 @@ export async function scanCommand(options) {
 
     try {
       const [predicted, actualSalt] = await readContract(
-        publicClient, FACTORY_ADDRESS, FACTORY_ABI, "predictCompressedLauncher",
+        publicClient, FACTORY_ADDRESS, FACTORY_ABI, "predictHarness",
         [owner, salt]
       );
 
@@ -65,8 +65,8 @@ export async function scanCommand(options) {
         let configured = false;
         let wakeMode = 0;
         try {
-          configured = await readContract(publicClient, predicted, LAUNCHER_ABI, "configured", []);
-          wakeMode = await readContract(publicClient, predicted, LAUNCHER_ABI, "wakeMode", []);
+          configured = await readContract(publicClient, predicted, HARNESS_ABI, "configured", []);
+          wakeMode = await readContract(publicClient, predicted, HARNESS_ABI, "wakeMode", []);
         } catch (e) {
           // Agent might not have these functions available yet
         }

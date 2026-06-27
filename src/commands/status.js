@@ -4,7 +4,7 @@ import chalk from "chalk";
 import { getAddress, formatEther } from "viem";
 import { createPublic } from "../lib/chain.js";
 import {
-  LAUNCHER_ABI,
+  HARNESS_ABI,
   RITUAL_WALLET,
   WALLET_ABI,
 } from "../lib/contracts.js";
@@ -39,14 +39,14 @@ export async function statusCommand(address) {
 
   // Read agent state
   try {
-    const configured = await readContract(publicClient, agentAddr, LAUNCHER_ABI, "configured", []);
+    const configured = await readContract(publicClient, agentAddr, HARNESS_ABI, "configured", []);
     printKV("Configured", configured ? chalk.green("true") : chalk.yellow("false"));
 
-    const wakeMode = await readContract(publicClient, agentAddr, LAUNCHER_ABI, "wakeMode", []);
+    const wakeMode = await readContract(publicClient, agentAddr, HARNESS_ABI, "wakeMode", []);
     const wakeLabels = { 0: "Stopped", 1: "Armed", 2: "Sleeping" };
     printKV("Wake mode", wakeLabels[wakeMode] || String(wakeMode));
 
-    const owner = await readContract(publicClient, agentAddr, LAUNCHER_ABI, "owner", []);
+    const owner = await readContract(publicClient, agentAddr, HARNESS_ABI, "owner", []);
     printKV("Owner", shortAddress(owner));
 
     const stateLabel = getAgentStateLabel({ exists, configured, wakeMode });
