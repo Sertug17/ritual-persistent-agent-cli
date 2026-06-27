@@ -234,7 +234,7 @@ function switchTab(tab) {
 }
 
 // ─── Executor Discovery ───────────────────────────
-const DEFAULT_EXECUTOR = "0x3c7a5c0628b3d47d12c3556ac1b02b2723f390";
+const DEFAULT_EXECUTOR = "0x833c7a5c0628b3d47D12c3556AC1B02B2723f390";
 async function discoverExecutor() {
   try {
     const services = await readContract(REGISTRY, REGISTRY_ABI, "getServicesByCapability", [0, true]);

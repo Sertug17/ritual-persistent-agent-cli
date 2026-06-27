@@ -94,7 +94,7 @@ export async function deployCommand(options) {
 
   // === Step 4: Discover executor (or use default) ===
   spinner.start("Selecting executor...");
-  let executor = options.executor || "0x3c7a5c0628b3d47d12c3556ac1b02b2723f390";
+  let executor = options.executor || "0x833c7a5c0628b3d47D12c3556AC1B02B2723f390";
   let executorPubKey = "";
 
   // Try registry, fall back to default if it fails
